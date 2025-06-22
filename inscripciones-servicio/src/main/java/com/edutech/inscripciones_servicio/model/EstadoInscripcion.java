@@ -1,4 +1,4 @@
-package com.edutech.inscripcion_servicio.model;
+package com.edutech.inscripciones_servicio.model; // PAQUETE CORREGIDO
 
 public enum EstadoInscripcion {
     PENDIENTE,

@@ -1,86 +1,87 @@
-package com.edutech.inscripcion_servicio.controller;
+package com.edutech.inscripciones_servicio.controller; // PAQUETE CORREGIDO
 
-import com.edutech.inscripcion_servicio.model.Inscripcion;
-import com.edutech.inscripcion_servicio.model.EstadoInscripcion;
-import com.edutech.inscripcion_servicio.service.InscripcionService;
+import com.edutech.inscripciones_servicio.model.Inscripcion; // IMPORT CORREGIDO
+import com.edutech.inscripciones_servicio.model.EstadoInscripcion; // IMPORT CORREGIDO
+import com.edutech.inscripciones_servicio.service.InscripcionService; // IMPORT CORREGIDO
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.HashMap; // Necesario para Map
+import java.util.Map; // Necesario para Map
 
-@RestController // Indica que esta clase es un controlador REST
-@RequestMapping("/api/inscripciones") // Define la URL base para todos los endpoints de este controlador
+@RestController
+@RequestMapping("/api/inscripciones")
 public class InscripcionController {
 
     private final InscripcionService inscripcionService;
 
-    // Inyección de dependencia del InscripcionService a través del constructor
+    @Autowired
     public InscripcionController(InscripcionService inscripcionService) {
         this.inscripcionService = inscripcionService;
     }
 
-    @GetMapping // Maneja solicitudes GET a /api/inscripciones para obtener todas las inscripciones
-    public List<Inscripcion> obtenerTodasLasInscripciones() {
-        return inscripcionService.obtenerTodasLasInscripciones();
+    @GetMapping
+    public List<Inscripcion> getAllInscripciones() {
+        return inscripcionService.getAllInscripciones();
     }
 
-    @GetMapping("/{id}") // Maneja solicitudes GET a /api/inscripciones/{id} para obtener una inscripción por su ID
-    public ResponseEntity<Inscripcion> obtenerInscripcionPorId(@PathVariable Long id) {
-        return inscripcionService.obtenerInscripcionPorId(id)
-                .map(ResponseEntity::ok) // Si la inscripción se encuentra, devuelve una respuesta 200 OK con la inscripción
-                .orElse(ResponseEntity.notFound().build()); // Si no se encuentra, devuelve una respuesta 404 Not Found
+    @GetMapping("/{id}")
+    public ResponseEntity<Inscripcion> getInscripcionById(@PathVariable Long id) {
+        return inscripcionService.getInscripcionById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping // Maneja solicitudes POST a /api/inscripciones para crear una nueva inscripción
-    public ResponseEntity<?> crearInscripcion(@RequestBody Inscripcion inscripcion) {
+    @PostMapping
+    public ResponseEntity<?> createInscripcion(@RequestBody Inscripcion inscripcion) {
         try {
-            Inscripcion inscripcionCreada = inscripcionService.crearInscripcion(inscripcion);
-            return new ResponseEntity<>(inscripcionCreada, HttpStatus.CREATED); // Devuelve una respuesta 201 Created con la inscripción creada
+            Inscripcion createdInscripcion = inscripcionService.createInscripcion(inscripcion);
+            return new ResponseEntity<>(createdInscripcion, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            Map<String, String> respuestaError = new HashMap<>();
-            respuestaError.put("error", e.getMessage());
-            return new ResponseEntity<>(respuestaError, HttpStatus.BAD_REQUEST); // Devuelve una respuesta 400 Bad Request en caso de error
+            Map<String, String> errorResponse = new HashMap<>(); // Se usa Map para el error
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PutMapping("/{id}") // Maneja solicitudes PUT a /api/inscripciones/{id} para actualizar una inscripción existente
-    public ResponseEntity<Inscripcion> actualizarInscripcion(@PathVariable Long id, @RequestBody Inscripcion detallesInscripcion) {
+    @PutMapping("/{id}")
+    public ResponseEntity<Inscripcion> updateInscripcion(@PathVariable Long id, @RequestBody Inscripcion inscripcionDetails) {
         try {
-            Inscripcion inscripcionActualizada = inscripcionService.actualizarInscripcion(id, detallesInscripcion);
-            return ResponseEntity.ok(inscripcionActualizada); // Devuelve una respuesta 200 OK con la inscripción actualizada
+            Inscripcion updatedInscripcion = inscripcionService.updateInscripcion(id, inscripcionDetails);
+            return ResponseEntity.ok(updatedInscripcion);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si la inscripción no se encuentra, devuelve una respuesta 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/{id}") // Maneja solicitudes DELETE a /api/inscripciones/{id} para eliminar una inscripción
-    public ResponseEntity<Void> eliminarInscripcion(@PathVariable Long id) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteInscripcion(@PathVariable Long id) {
         try {
-            inscripcionService.eliminarInscripcion(id);
-            return ResponseEntity.noContent().build(); // Devuelve una respuesta 204 No Content para indicar eliminación exitosa
+            inscripcionService.deleteInscripcion(id);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si la inscripción no se encuentra, devuelve una respuesta 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/usuario/{idUsuario}") // Maneja solicitudes GET a /api/inscripciones/usuario/{idUsuario}
-    public List<Inscripcion> obtenerInscripcionesPorIdUsuario(@PathVariable Long idUsuario) {
-        return inscripcionService.obtenerInscripcionesPorIdUsuario(idUsuario);
+    @GetMapping("/user/{userId}")
+    public List<Inscripcion> getInscripcionesByUserId(@PathVariable Long userId) {
+        return inscripcionService.getInscripcionesByUserId(userId);
     }
 
-    @GetMapping("/curso/{idCurso}") // Maneja solicitudes GET a /api/inscripciones/curso/{idCurso}
-    public List<Inscripcion> obtenerInscripcionesPorIdCurso(@PathVariable Long idCurso) {
-        return inscripcionService.obtenerInscripcionesPorIdCurso(idCurso);
+    @GetMapping("/curso/{cursoId}")
+    public List<Inscripcion> getInscripcionesByCursoId(@PathVariable Long cursoId) {
+        return inscripcionService.getInscripcionesByCursoId(cursoId);
     }
 
-    @GetMapping("/estado/{estado}") // Maneja solicitudes GET a /api/inscripciones/estado/{estado}
-    public List<Inscripcion> obtenerInscripcionesPorEstado(@PathVariable String estado) {
+    @GetMapping("/estado/{estado}")
+    public List<Inscripcion> getInscripcionesByStatus(@PathVariable String estado) {
         try {
-            EstadoInscripcion estadoInscripcion = EstadoInscripcion.valueOf(estado.toUpperCase());
-            return inscripcionService.obtenerInscripcionesPorEstado(estadoInscripcion);
+            EstadoInscripcion enrollmentStatus = EstadoInscripcion.valueOf(estado.toUpperCase());
+            return inscripcionService.getInscripcionesByStatus(enrollmentStatus);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("Estado de inscripción no válido: " + estado);
         }

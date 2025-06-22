@@ -1,4 +1,4 @@
-package com.edutech.login_servicio.model; // CORREGIDO: Usar 'login_servicio'
+package com.edutech.usuario_servicio.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "login_users") // Usamos un nombre diferente para evitar conflictos con usuario-service
+@Table(name = "users") // Nombre de tabla general para usuarios de la plataforma
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -20,9 +20,12 @@ public class User {
     private String username;
 
     @Column(nullable = false)
-    private String password; // ¡RECORDATORIO: En una aplicación real, ENCRIPTAR esta contraseña!
+    private String password; // Contraseña del usuario (debe ser encriptada)
+
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role; // Rol básico para el usuario de login (ej. USER, ADMIN)
+    private Role role; // Rol del usuario en la plataforma (Estudiante, Profesor, Admin)
 }

@@ -1,92 +1,74 @@
-package Edutech.inscripciones-servicio.src.main.java.com.edutech.inscripciones_servicio.service;
+package com.edutech.inscripciones_servicio.service; // PAQUETE CORREGIDO
 
-public class InscripcionService {
-    
-}package com.edutech.inscripcion_servicio.controller;
+import com.edutech.inscripciones_servicio.model.Inscripcion; // IMPORT CORREGIDO
+import com.edutech.inscripciones_servicio.model.EstadoInscripcion; // IMPORT CORREGIDO
+import com.edutech.inscripciones_servicio.repository.InscripcionRepository; // IMPORT CORREGIDO
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import com.edutech.inscripcion_servicio.model.Inscripcion;
-import com.edutech.inscripcion_servicio.model.EstadoInscripcion;
-import com.edutech.inscripcion_servicio.service.InscripcionService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.Optional;
 
-@RestController // Indica que esta clase es un controlador REST
-@RequestMapping("/api/inscripciones") // Define la URL base para todos los endpoints de este controlador
-public class InscripcionController {
+@Service
+public class InscripcionService {
 
-    private final InscripcionService inscripcionService;
+    private final InscripcionRepository inscripcionRepository;
 
-    // Inyección de dependencia del InscripcionService a través del constructor
-    public InscripcionController(InscripcionService inscripcionService) {
-        this.inscripcionService = inscripcionService;
+    @Autowired
+    public InscripcionService(InscripcionRepository inscripcionRepository) {
+        this.inscripcionRepository = inscripcionRepository;
     }
 
-    @GetMapping // Maneja solicitudes GET a /api/inscripciones para obtener todas las inscripciones
-    public List<Inscripcion> obtenerTodasLasInscripciones() {
-        return inscripcionService.obtenerTodasLasInscripciones();
+    public List<Inscripcion> getAllInscripciones() {
+        return inscripcionRepository.findAll();
     }
 
-    @GetMapping("/{id}") // Maneja solicitudes GET a /api/inscripciones/{id} para obtener una inscripción por su ID
-    public ResponseEntity<Inscripcion> obtenerInscripcionPorId(@PathVariable Long id) {
-        return inscripcionService.obtenerInscripcionPorId(id)
-                .map(ResponseEntity::ok) // Si la inscripción se encuentra, devuelve una respuesta 200 OK con la inscripción
-                .orElse(ResponseEntity.notFound().build()); // Si no se encuentra, devuelve una respuesta 404 Not Found
+    public Optional<Inscripcion> getInscripcionById(Long id) {
+        return inscripcionRepository.findById(id);
     }
 
-    @PostMapping // Maneja solicitudes POST a /api/inscripciones para crear una nueva inscripción
-    public ResponseEntity<?> crearInscripcion(@RequestBody Inscripcion inscripcion) {
-        try {
-            Inscripcion inscripcionCreada = inscripcionService.crearInscripcion(inscripcion);
-            return new ResponseEntity<>(inscripcionCreada, HttpStatus.CREATED); // Devuelve una respuesta 201 Created con la inscripción creada
-        } catch (RuntimeException e) {
-            Map<String, String> respuestaError = new HashMap<>();
-            respuestaError.put("error", e.getMessage());
-            return new ResponseEntity<>(respuestaError, HttpStatus.BAD_REQUEST); // Devuelve una respuesta 400 Bad Request en caso de error
+    public Inscripcion createInscripcion(Inscripcion inscripcion) {
+        if (!inscripcionRepository.findByUserIdAndCursoId(inscripcion.getUserId(), inscripcion.getCursoId()).isEmpty()) {
+            throw new RuntimeException("El usuario ya está inscrito en este curso.");
         }
-    }
-
-    @PutMapping("/{id}") // Maneja solicitudes PUT a /api/inscripciones/{id} para actualizar una inscripción existente
-    public ResponseEntity<Inscripcion> actualizarInscripcion(@PathVariable Long id, @RequestBody Inscripcion detallesInscripcion) {
-        try {
-            Inscripcion inscripcionActualizada = inscripcionService.actualizarInscripcion(id, detallesInscripcion);
-            return ResponseEntity.ok(inscripcionActualizada); // Devuelve una respuesta 200 OK con la inscripción actualizada
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si la inscripción no se encuentra, devuelve una respuesta 404 Not Found
+        if (inscripcion.getFechaInscripcion() == null) {
+            inscripcion.setFechaInscripcion(LocalDate.now());
         }
-    }
-
-    @DeleteMapping("/{id}") // Maneja solicitudes DELETE a /api/inscripciones/{id} para eliminar una inscripción
-    public ResponseEntity<Void> eliminarInscripcion(@PathVariable Long id) {
-        try {
-            inscripcionService.eliminarInscripcion(id);
-            return ResponseEntity.noContent().build(); // Devuelve una respuesta 204 No Content para indicar eliminación exitosa
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si la inscripción no se encuentra, devuelve una respuesta 404 Not Found
+        if (inscripcion.getStatus() == null) {
+            inscripcion.setStatus(EstadoInscripcion.ACTIVA);
         }
+        return inscripcionRepository.save(inscripcion);
     }
 
-    @GetMapping("/usuario/{idUsuario}") // Maneja solicitudes GET a /api/inscripciones/usuario/{idUsuario}
-    public List<Inscripcion> obtenerInscripcionesPorIdUsuario(@PathVariable Long idUsuario) {
-        return inscripcionService.obtenerInscripcionesPorIdUsuario(idUsuario);
+    public Inscripcion updateInscripcion(Long id, Inscripcion inscripcionDetails) {
+        return inscripcionRepository.findById(id)
+                .map(inscripcion -> {
+                    inscripcion.setUserId(inscripcionDetails.getUserId());
+                    inscripcion.setCursoId(inscripcionDetails.getCursoId());
+                    inscripcion.setFechaInscripcion(inscripcionDetails.getFechaInscripcion());
+                    inscripcion.setStatus(inscripcionDetails.getStatus());
+                    return inscripcionRepository.save(inscripcion);
+                })
+                .orElseThrow(() -> new RuntimeException("Inscripción no encontrada con ID: " + id));
     }
 
-    @GetMapping("/curso/{idCurso}") // Maneja solicitudes GET a /api/inscripciones/curso/{idCurso}
-    public List<Inscripcion> obtenerInscripcionesPorIdCurso(@PathVariable Long idCurso) {
-        return inscripcionService.obtenerInscripcionesPorIdCurso(idCurso);
-    }
-
-    @GetMapping("/estado/{estado}") // Maneja solicitudes GET a /api/inscripciones/estado/{estado}
-    public List<Inscripcion> obtenerInscripcionesPorEstado(@PathVariable String estado) {
-        try {
-            EstadoInscripcion estadoInscripcion = EstadoInscripcion.valueOf(estado.toUpperCase());
-            return inscripcionService.obtenerInscripcionesPorEstado(estadoInscripcion);
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Estado de inscripción no válido: " + estado);
+    public void deleteInscripcion(Long id) {
+        if (!inscripcionRepository.existsById(id)) {
+            throw new RuntimeException("Inscripción no encontrada con ID: " + id);
         }
+        inscripcionRepository.deleteById(id);
+    }
+
+    public List<Inscripcion> getInscripcionesByUserId(Long userId) {
+        return inscripcionRepository.findByUserId(userId);
+    }
+
+    public List<Inscripcion> getInscripcionesByCursoId(Long cursoId) {
+        return inscripcionRepository.findByCursoId(cursoId);
+    }
+
+    public List<Inscripcion> getInscripcionesByStatus(EstadoInscripcion status) {
+        return inscripcionRepository.findByStatus(status);
     }
 }
