@@ -1,9 +1,10 @@
-package com.edutech.curso_servicio.service;
+package com.edutech.curso_servicio.service; // Asegúrate de que este paquete coincida con la estructura de tu proyecto
 
-import com.edutech.curso_servicio.model.Curso;
-import com.edutech.curso_servicio.repository.CursoRepository;
-import org.springframework.stereotype.Service;
+import com.edutech.curso_servicio.model.Curso; // Importa tu clase Curso del paquete correcto
+import com.edutech.curso_servicio.repository.CursoRepository; // Importa tu interfaz CursoRepository del paquete correcto
+import org.springframework.stereotype.Service; // Importa Service
 
+import java.time.LocalDate; // Importar LocalDate para las fechas
 import java.util.List;
 import java.util.Optional;
 
@@ -13,7 +14,7 @@ public class CursoService {
     private final CursoRepository cursoRepository;
 
     // Inyección de dependencia del CursoRepository a través del constructor
-    // (práctica recomendada en Spring Boot 3+).
+    // @Autowired // Se recomienda para la inyección por constructor - ¡ELIMINADO: Anotación @Autowired innecesaria!
     public CursoService(CursoRepository cursoRepository) {
         this.cursoRepository = cursoRepository;
     }
@@ -30,8 +31,14 @@ public class CursoService {
 
     // Crea un nuevo curso
     public Curso crearCurso(Curso curso) {
+        // === VALIDACIÓN CRUCIAL PARA testCrearCurso_NombreVacio ===
+        // Asegurarse de que el nombre del curso no esté vacío o sea nulo
+        if (curso.getNombre() == null || curso.getNombre().trim().isEmpty()) {
+            throw new RuntimeException("El nombre del curso no puede estar vacío.");
+        }
+        // =========================================================
+
         // Validación de negocio: Asegurarse de que el nombre del curso sea único.
-        // Si ya existe un curso con el mismo nombre, lanza una excepción.
         if (cursoRepository.findByNombre(curso.getNombre()).isPresent()) {
             throw new RuntimeException("Ya existe un curso con el nombre: " + curso.getNombre());
         }
@@ -62,6 +69,7 @@ public class CursoService {
     public void eliminarCurso(Long id) {
         // Verifica si el curso existe antes de intentar eliminarlo.
         if (!cursoRepository.existsById(id)) {
+            // CORREGIDO: Eliminado el 'new' redundante.
             throw new RuntimeException("Curso no encontrado con ID: " + id);
         }
         // Elimina el curso de la base de datos

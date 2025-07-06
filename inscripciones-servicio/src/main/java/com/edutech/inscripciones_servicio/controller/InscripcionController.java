@@ -1,89 +1,105 @@
-package com.edutech.inscripciones_servicio.controller; // PAQUETE CORREGIDO
+package com.edutech.inscripciones_servicio.controller;
 
-import com.edutech.inscripciones_servicio.model.Inscripcion; // IMPORT CORREGIDO
-import com.edutech.inscripciones_servicio.model.EstadoInscripcion; // IMPORT CORREGIDO
-import com.edutech.inscripciones_servicio.service.InscripcionService; // IMPORT CORREGIDO
+import com.edutech.inscripciones_servicio.model.Inscripcion;
+import com.edutech.inscripciones_servicio.model.EstadoInscripcion;
+import com.edutech.inscripciones_servicio.service.InscripcionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.HashMap; // Necesario para Map
-import java.util.Map; // Necesario para Map
+import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/inscripciones")
+@RestController // Indica que esta clase es un controlador REST
+@RequestMapping("/inscripciones") // Define la ruta base para todos los endpoints de este controlador
 public class InscripcionController {
 
-    private final InscripcionService inscripcionService;
+    @Autowired // Inyecta una instancia de InscripcionService
+    private InscripcionService inscripcionService;
 
-    @Autowired
-    public InscripcionController(InscripcionService inscripcionService) {
-        this.inscripcionService = inscripcionService;
-    }
-
+    // Endpoint para obtener todas las inscripciones
     @GetMapping
-    public List<Inscripcion> getAllInscripciones() {
-        return inscripcionService.getAllInscripciones();
+    public ResponseEntity<List<Inscripcion>> getAllInscripciones() {
+        List<Inscripcion> inscripciones = inscripcionService.getAllInscripciones();
+        return new ResponseEntity<>(inscripciones, HttpStatus.OK);
     }
 
+    // Endpoint para obtener una inscripción por su ID
     @GetMapping("/{id}")
     public ResponseEntity<Inscripcion> getInscripcionById(@PathVariable Long id) {
-        return inscripcionService.getInscripcionById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Optional<Inscripcion> inscripcion = inscripcionService.getInscripcionById(id);
+        return inscripcion.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    // Endpoint para crear una nueva inscripción
     @PostMapping
-    public ResponseEntity<?> createInscripcion(@RequestBody Inscripcion inscripcion) {
+    public ResponseEntity<Inscripcion> createInscripcion(@RequestBody Inscripcion inscripcion) {
         try {
             Inscripcion createdInscripcion = inscripcionService.createInscripcion(inscripcion);
             return new ResponseEntity<>(createdInscripcion, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            Map<String, String> errorResponse = new HashMap<>(); // Se usa Map para el error
-            errorResponse.put("error", e.getMessage());
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            // Manejo de errores específicos, por ejemplo, si la inscripción ya existe
+            return new ResponseEntity<>(HttpStatus.CONFLICT); // O HttpStatus.BAD_REQUEST con un mensaje de error
         }
     }
 
+    // Endpoint para actualizar una inscripción existente
     @PutMapping("/{id}")
     public ResponseEntity<Inscripcion> updateInscripcion(@PathVariable Long id, @RequestBody Inscripcion inscripcionDetails) {
         try {
             Inscripcion updatedInscripcion = inscripcionService.updateInscripcion(id, inscripcionDetails);
-            return ResponseEntity.ok(updatedInscripcion);
+            return new ResponseEntity<>(updatedInscripcion, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
+    // Endpoint para eliminar una inscripción por su ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteInscripcion(@PathVariable Long id) {
         try {
             inscripcionService.deleteInscripcion(id);
-            return ResponseEntity.noContent().build();
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
+    // Endpoint para obtener inscripciones por ID de usuario
     @GetMapping("/user/{userId}")
-    public List<Inscripcion> getInscripcionesByUserId(@PathVariable Long userId) {
-        return inscripcionService.getInscripcionesByUserId(userId);
+    public ResponseEntity<List<Inscripcion>> getInscripcionesByUserId(@PathVariable Long userId) {
+        List<Inscripcion> inscripciones = inscripcionService.getInscripcionesByUserId(userId);
+        if (inscripciones.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(inscripciones, HttpStatus.OK);
     }
 
+    // Endpoint para obtener inscripciones por ID de curso
     @GetMapping("/curso/{cursoId}")
-    public List<Inscripcion> getInscripcionesByCursoId(@PathVariable Long cursoId) {
-        return inscripcionService.getInscripcionesByCursoId(cursoId);
+    public ResponseEntity<List<Inscripcion>> getInscripcionesByCursoId(@PathVariable Long cursoId) {
+        List<Inscripcion> inscripciones = inscripcionService.getInscripcionesByCursoId(cursoId);
+        if (inscripciones.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        return new ResponseEntity<>(inscripciones, HttpStatus.OK);
     }
 
-    @GetMapping("/estado/{estado}")
-    public List<Inscripcion> getInscripcionesByStatus(@PathVariable String estado) {
+    // Endpoint para obtener inscripciones por estado
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<Inscripcion>> getInscripcionesByStatus(@PathVariable String status) {
         try {
-            EstadoInscripcion enrollmentStatus = EstadoInscripcion.valueOf(estado.toUpperCase());
-            return inscripcionService.getInscripcionesByStatus(enrollmentStatus);
+            EstadoInscripcion estadoEnum = EstadoInscripcion.valueOf(status.toUpperCase());
+            List<Inscripcion> inscripciones = inscripcionService.getInscripcionesByStatus(estadoEnum);
+            if (inscripciones.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(inscripciones, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            throw new RuntimeException("Estado de inscripción no válido: " + estado);
+            // Maneja el caso donde el estado proporcionado no es válido
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 }

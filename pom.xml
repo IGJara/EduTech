@@ -13,8 +13,9 @@
     <description>Proyecto padre para los microservicios de la plataforma EduTech</description>
 
     <properties>
-        <java.version>21</java.version> <!-- Versión de Java a utilizar para todos los módulos -->
-        <spring-boot.version>3.3.13</spring-boot.version> <!-- Versión de Spring Boot que se aplica a todos los módulos -->
+        <java.version>21</java.version> <!-- Versión de Java a utilizar -->
+        <spring-boot.version>3.3.13</spring-boot.version> <!-- Versión de Spring Boot -->
+        <spring-cloud.version>2023.0.3</spring-cloud.version> <!-- ¡NUEVO: Versión de Spring Cloud! -->
         <springdoc.version>2.5.0</springdoc.version> <!-- Versión de SpringDoc OpenAPI (para Swagger UI) -->
         <lombok.version>1.18.30</lombok.version> <!-- Versión de Lombok -->
         <mysql-connector.version>8.0.33</mysql-connector.version> <!-- Versión del conector MySQL -->
@@ -24,10 +25,9 @@
     </properties>
 
     <!-- Define las versiones de dependencias para los módulos hijos -->
-    <!-- Los módulos hijos solo necesitan declarar la dependencia, no la versión -->
     <dependencyManagement>
         <dependencies>
-            <!-- Importa las dependencias de Spring Boot para asegurar la consistencia de versiones -->
+            <!-- Importa las dependencias de Spring Boot para consistencia -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -36,38 +36,45 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- ¡NUEVO: Importa las dependencias de Spring Cloud para consistencia! -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Dependencia de SpringDoc OpenAPI para la documentación de API (Swagger UI) -->
-            <!-- Si no se va a usar Swagger, esta dependencia y sus imports en OpenApiConfig.java se pueden omitir -->
             <dependency>
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
             </dependency>
 
-            <!-- Dependencia de Lombok para reducir código boilerplate (getters, setters, etc.) -->
+            <!-- Dependencia de Lombok para reducir código boilerplate -->
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
                 <version>${lombok.version}</version>
-                <scope>provided</scope> <!-- 'provided' indica que Lombok se usa solo en tiempo de compilación/desarrollo -->
+                <scope>provided</scope>
                 <optional>true</optional>
             </dependency>
 
-            <!-- Dependencia del conector MySQL para la conexión a la base de datos -->
+            <!-- Dependencia del conector MySQL -->
             <dependency>
                 <groupId>com.mysql</groupId>
                 <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql-connector.version}</version>
-                <scope>runtime</scope> <!-- 'runtime' indica que se necesita en tiempo de ejecución, no en compilación -->
+                <scope>runtime</scope>
             </dependency>
 
-            <!-- Aquí se pueden añadir otras dependencias comunes que todos los servicios o la mayoría usarán -->
+            <!-- Aquí puedes añadir otras dependencias comunes que todos los servicios usarán -->
 
         </dependencies>
     </dependencyManagement>
 
     <!-- Declara los módulos (microservicios) que forman parte de este proyecto padre -->
-    <!-- Deben ser los nombres exactos de las carpetas de tus microservicios -->
     <modules>
         <module>curso-servicio</module>
         <module>inscripciones-servicio</module>
@@ -77,11 +84,10 @@
     </modules>
 
     <!-- Define la gestión de plugins para los módulos hijos -->
-    <!-- Esto asegura que todos los módulos usan las mismas versiones de plugins y configuraciones -->
     <build>
         <pluginManagement>
             <plugins>
-                <!-- Plugin de Spring Boot para empaquetar las aplicaciones como ejecutables JAR/WAR -->
+                <!-- Plugin de Spring Boot para empaquetar aplicaciones ejecutables -->
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
@@ -89,7 +95,7 @@
                     <executions>
                         <execution>
                             <goals>
-                                <goal>repackage</goal> <!-- Crea un JAR ejecutable con dependencias anidadas -->
+                                <goal>repackage</goal>
                             </goals>
                         </execution>
                     </executions>
@@ -123,38 +129,15 @@
                     </configuration>
                 </plugin>
 
-                <!-- Plugin Surefire para la ejecución de pruebas unitarias -->
+                <!-- Plugin Surefire para la ejecución de pruebas (se usará -DskipTests) -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version> <!-- Asegura la compatibilidad con JUnit 5 -->
+                    <version>3.2.5</version>
                     <configuration>
-                        <!-- Puedes añadir configuraciones como la memoria para pruebas si es necesario -->
-                        <!-- <argLine>-Xmx1024m</argLine> -->
+                        <argLine>-Xmx1024m</argLine>
                     </configuration>
                 </plugin>
-
-                <!-- Plugin de Maven para limpiar los directorios de compilación -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>3.4.1</version>
-                </plugin>
-
-                <!-- Plugin de Maven para copiar recursos -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>3.3.1</version>
-                </plugin>
-
-                <!-- Plugin de Maven para la instalación de artefactos en el repositorio local -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>3.1.2</version>
-                </plugin>
-
             </plugins>
         </pluginManagement>
     </build>

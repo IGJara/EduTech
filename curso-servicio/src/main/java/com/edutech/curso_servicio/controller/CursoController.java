@@ -1,7 +1,7 @@
-package com.edutech.curso_servicio.controller;
+package com.edutech.curso_servicio.controller; // Paquete actualizado para coincidir con la estructura
 
-import com.edutech.curso_servicio.model.Curso;
-import com.edutech.curso_servicio.service.CursoService;
+import com.edutech.curso_servicio.model.Curso; // Importa la clase Curso del nuevo paquete
+import com.edutech.curso_servicio.service.CursoService; // Importa la clase CursoService del nuevo paquete
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

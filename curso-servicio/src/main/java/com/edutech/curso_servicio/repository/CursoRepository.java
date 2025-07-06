@@ -1,6 +1,6 @@
-package com.edutech.curso_servicio.repository;
+package com.edutech.curso_servicio.repository; // Paquete actualizado para coincidir con la estructura
 
-import com.edutech.curso_servicio.model.Curso;
+import com.edutech.curso_servicio.model.Curso; // Importa la clase Curso del nuevo paquete
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,10 +12,7 @@ public interface CursoRepository extends JpaRepository<Curso, Long> {
     // JpaRepository proporciona métodos CRUD básicos: save, findById, findAll, deleteById, etc.
 
     // Métodos de consulta personalizados:
-    // Encuentra un curso por su nombre (campo 'nombre' en la entidad Curso)
-    Optional<Curso> findByNombre(String nombre);
-    // Encuentra cursos por categoría (campo 'categoria' en la entidad Curso)
-    List<Curso> findByCategoria(String categoria);
-    // Encuentra cursos por el nombre de usuario del profesor (campo 'nombreUsuarioProfesor' en la entidad Curso)
-    List<Curso> findByNombreUsuarioProfesor(String nombreUsuarioProfesor);
+    Optional<Curso> findByNombre(String nombre); // Encuentra un curso por su nombre (campo 'nombre')
+    List<Curso> findByCategoria(String categoria); // Encuentra cursos por categoría (campo 'categoria')
+    List<Curso> findByNombreUsuarioProfesor(String nombreUsuarioProfesor); // Encuentra cursos de un profesor específico (campo 'nombreUsuarioProfesor')
 }

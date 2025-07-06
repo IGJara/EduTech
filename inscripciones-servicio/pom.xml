@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.edutech</groupId>
+        <groupId>com.edutech</groupId> <!-- Asegúrate de que este groupId sea 'com.edutech' -->
         <artifactId>edutech-parent</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath> <!-- Ruta relativa al pom.xml padre -->
@@ -17,9 +17,12 @@
     <description>Microservicio para la gestión de inscripciones de EduTech</description>
 
     <properties>
+        <!-- Las propiedades como java.version, spring-boot.version, etc., se heredan del padre.
+            No es necesario definirlas aquí a menos que quieras sobrescribir un valor específico para este módulo. -->
     </properties>
 
     <dependencies>
+        <!-- Dependencias comunes a todos los servicios, sin especificar la versión (se gestionan en el padre) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -48,19 +51,28 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Dependencia de SpringDoc OpenAPI, su versión se gestiona desde el POM padre -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        
         </dependency>
 
     </dependencies>
 
     <build>
         <plugins>
+            <!-- El spring-boot-maven-plugin se hereda del pluginManagement del padre -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Otros plugins como maven-compiler-plugin también se heredan y configuran desde el padre -->
         </plugins>
     </build>
 
