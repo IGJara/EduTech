@@ -1,68 +1,103 @@
-package com.edutech.usuario_servicio.service; // Paquete correcto para coincidir con la carpeta: usuario_servicio
+package com.edutech.usuario_servicio.service;
 
-import com.edutech.usuario_servicio.model.RolUsuario; // Importa la clase RolUsuario (coincide con RolUsuario.java)
-import com.edutech.usuario_servicio.model.Usuario; // Importa la clase Usuario (coincide con Usuario.java)
-import com.edutech.usuario_servicio.repository.UsuarioRepository; // Importa la interfaz UsuarioRepository (coincide con UsuarioRepository.java)
+import com.edutech.usuario_servicio.model.Usuario;
+import com.edutech.usuario_servicio.model.TipoUsuario;
+import com.edutech.usuario_servicio.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@Service // Indica que esta clase es un componente de servicio
-public class UsuarioService { // CLASE: UsuarioService (coincide con UsuarioService.java)
+@Service // Indica que esta clase es un componente de servicio de Spring
+public class UsuarioService {
 
-    private final UsuarioRepository usuarioRepository; // Usa la interfaz UsuarioRepository
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired // Inyección de dependencia del UsuarioRepository
+    // Constructor para inyección de dependencias
+    @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public List<Usuario> getAllUsuarios() { // Retorna una lista de objetos Usuario
+    // Obtiene todos los usuarios
+    public List<Usuario> getAllUsuarios() {
         return usuarioRepository.findAll();
     }
 
-    public Optional<Usuario> getUsuarioById(Long id) { // Retorna un Optional de Usuario
+    // Obtiene un usuario por su ID
+    public Optional<Usuario> getUsuarioById(Long id) {
         return usuarioRepository.findById(id);
     }
 
-    public Usuario createUsuario(Usuario usuario) { // Crea un nuevo Usuario
-        // Validaciones de negocio:
-        if (usuarioRepository.existsByUsername(usuario.getUsername())) {
-            throw new RuntimeException("El nombre de usuario ya existe.");
+    // Crea un nuevo usuario
+    public Usuario createUsuario(Usuario usuario) {
+        // Validar que el email no esté ya registrado
+        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            throw new RuntimeException("El email " + usuario.getEmail() + " ya está registrado.");
         }
-        if (usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RuntimeException("El email ya está registrado.");
+
+        // Asignar fecha de nacimiento si no está definida (ejemplo, puede ser nulo si no se requiere)
+        if (usuario.getFechaNacimiento() == null) {
+            // Opcional: asignar una fecha por defecto o validar que no sea nula si es un campo requerido
+            // usuario.setFechaNacimiento(LocalDate.now());
         }
-        // En una aplicación real: encriptar la contraseña antes de guardar
+        // Asignar tipo de usuario por defecto si no está asignado
+        if (usuario.getTipoUsuario() == null) {
+            usuario.setTipoUsuario(TipoUsuario.ESTUDIANTE); // Por defecto, un nuevo usuario es estudiante
+        }
+
+        // En una aplicación real, la contraseña debería ser encriptada aquí
+        // usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+
+        // Guarda el nuevo usuario en la base de datos
         return usuarioRepository.save(usuario);
     }
 
-    public Usuario updateUsuario(Long id, Usuario usuarioDetails) { // Actualiza un Usuario existente
+    // Actualiza un usuario existente
+    public Usuario updateUsuario(Long id, Usuario usuarioDetails) {
         return usuarioRepository.findById(id)
-                .map(usuario -> {
-                    usuario.setUsername(usuarioDetails.getUsername());
-                    usuario.setEmail(usuarioDetails.getEmail());
-                    usuario.setRole(usuarioDetails.getRole());
-                    // Puedes añadir más campos a actualizar aquí si es necesario
-                    return usuarioRepository.save(usuario);
+                .map(usuarioExistente -> {
+                    // Actualiza los campos relevantes
+                    usuarioExistente.setEmail(usuarioDetails.getEmail());
+                    usuarioExistente.setPassword(usuarioDetails.getPassword()); // Encriptar en un caso real
+                    usuarioExistente.setNombre(usuarioDetails.getNombre());
+                    usuarioExistente.setApellido(usuarioDetails.getApellido());
+                    usuarioExistente.setFechaNacimiento(usuarioDetails.getFechaNacimiento());
+                    usuarioExistente.setTipoUsuario(usuarioDetails.getTipoUsuario());
+                    usuarioExistente.setDireccion(usuarioDetails.getDireccion());
+                    usuarioExistente.setTelefono(usuarioDetails.getTelefono());
+                    return usuarioRepository.save(usuarioExistente);
                 })
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
     }
 
-    public void deleteUsuario(Long id) { // Elimina un Usuario por ID
+    // Elimina un usuario por su ID
+    public void deleteUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
         }
         usuarioRepository.deleteById(id);
     }
 
-    public List<Usuario> getUsuariosByRole(RolUsuario role) { // Busca Usuarios por RolUsuario
-        // Es más eficiente si defines un método findByRole(RolUsuario role) en UsuarioRepository,
-        // pero esta implementación filtra después de obtener todos los usuarios.
-        return usuarioRepository.findAll().stream()
-                .filter(usuario -> usuario.getRole().equals(role))
-                .toList();
+    // Obtiene un usuario por su email
+    public Optional<Usuario> getUsuarioByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
+    }
+
+    // Obtiene usuarios por tipo
+    public List<Usuario> getUsuariosByTipoUsuario(TipoUsuario tipoUsuario) {
+        return usuarioRepository.findByTipoUsuario(tipoUsuario);
+    }
+
+    // Obtiene usuarios por nombre y apellido (búsqueda parcial)
+    public List<Usuario> searchUsuariosByNombreAndApellido(String nombre, String apellido) {
+        return usuarioRepository.findByNombreContainingIgnoreCaseAndApellidoContainingIgnoreCase(nombre, apellido);
+    }
+
+    // Método para verificar la existencia de un usuario por ID (para clientes Feign)
+    public boolean existeUsuario(Long id) {
+        return usuarioRepository.existsById(id);
     }
 }

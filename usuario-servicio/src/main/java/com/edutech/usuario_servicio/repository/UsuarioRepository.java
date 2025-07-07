@@ -1,17 +1,23 @@
-package com.edutech.usuario_servicio.repository; // Paquete correcto para coincidir con la carpeta: usuario_servicio
+package com.edutech.usuario_servicio.repository;
 
-import com.edutech.usuario_servicio.model.Usuario; // Importa la clase Usuario (coincide con Usuario.java)
+import com.edutech.usuario_servicio.model.Usuario;
+import com.edutech.usuario_servicio.model.TipoUsuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
-@Repository // Indica que esta interfaz es un componente de repositorio de Spring
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> { // INTERFACE: UsuarioRepository (coincide con UsuarioRepository.java)
-    // JpaRepository proporciona métodos CRUD básicos: save, findById, findAll, deleteById, etc.
+@Repository // Indica que esta interfaz es un componente de repositorio de Spring Data JPA
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+    // JpaRepository proporciona métodos CRUD básicos.
 
-    // Métodos de consulta personalizados si los necesitas
-    Optional<Usuario> findByUsername(String username); // Ejemplo: encontrar usuario por nombre de usuario
-    boolean existsByUsername(String username); // Verifica si un username ya existe
-    boolean existsByEmail(String email); // Verifica si un email ya existe
+    // Busca un usuario por su dirección de email
+    Optional<Usuario> findByEmail(String email);
+
+    // Busca usuarios por su tipo (ESTUDIANTE, PROFESOR, ADMINISTRADOR)
+    List<Usuario> findByTipoUsuario(TipoUsuario tipoUsuario);
+
+    // Busca usuarios por nombre y apellido
+    List<Usuario> findByNombreContainingIgnoreCaseAndApellidoContainingIgnoreCase(String nombre, String apellido);
 }
