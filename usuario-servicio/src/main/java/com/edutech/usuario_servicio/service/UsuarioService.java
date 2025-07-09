@@ -3,10 +3,8 @@ package com.edutech.usuario_servicio.service;
 import com.edutech.usuario_servicio.model.Usuario;
 import com.edutech.usuario_servicio.model.TipoUsuario;
 import com.edutech.usuario_servicio.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +14,6 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
     // Constructor para inyección de dependencias
-    @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }

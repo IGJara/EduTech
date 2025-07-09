@@ -1,7 +1,8 @@
-package com.edutech.curso_servicio.controller; // Paquete actualizado para coincidir con la estructura
+package com.edutech.curso_servicio.controller;
 
-import com.edutech.curso_servicio.model.Curso; // Importa la clase Curso del nuevo paquete
-import com.edutech.curso_servicio.service.CursoService; // Importa la clase CursoService del nuevo paquete
+import com.edutech.curso_servicio.model.Curso;
+import com.edutech.curso_servicio.service.CursoService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,69 +11,108 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-@RestController // Indica que esta clase es un controlador REST
-@RequestMapping("/api/cursos") // Define la URL base para todos los endpoints de este controlador
+@RestController // Indicates that this is a REST controller
+@RequestMapping("/api/cursos") // Base path for course endpoints
 public class CursoController {
 
     private final CursoService cursoService;
 
-    // Inyección de dependencia del CursoService a través del constructor
+    @Autowired // Dependency injection
     public CursoController(CursoService cursoService) {
         this.cursoService = cursoService;
     }
 
-    @GetMapping // Maneja solicitudes GET a /api/cursos para obtener todos los cursos
-    public List<Curso> obtenerTodosLosCursos() {
-        return cursoService.obtenerTodosLosCursos();
+    /**
+     * GET /api/cursos
+     * Retrieves all courses.
+     * @return A list of all courses with HTTP status OK.
+     */
+    @GetMapping
+    public ResponseEntity<List<Curso>> getAllCursos() {
+        List<Curso> cursos = cursoService.getAllCursos();
+        return new ResponseEntity<>(cursos, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}") // Maneja solicitudes GET a /api/cursos/{id} para obtener un curso por su ID
-    public ResponseEntity<Curso> obtenerCursoPorId(@PathVariable Long id) {
-        return cursoService.obtenerCursoPorId(id)
-                .map(ResponseEntity::ok) // Si el curso se encuentra, devuelve una respuesta 200 OK con el curso
-                .orElse(ResponseEntity.notFound().build()); // Si no se encuentra, devuelve una respuesta 404 Not Found
+    /**
+     * GET /api/cursos/{id}
+     * Retrieves a course by its ID.
+     * @param id The ID of the course.
+     * @return The course if found with HTTP status OK, or NOT_FOUND if not.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<Curso> getCursoById(@PathVariable Long id) {
+        return cursoService.getCursoById(id)
+                .map(curso -> new ResponseEntity<>(curso, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping // Maneja solicitudes POST a /api/cursos para crear un nuevo curso
-    public ResponseEntity<?> crearCurso(@RequestBody Curso curso) {
+    /**
+     * POST /api/cursos
+     * Creates a new course.
+     * @param curso The course object to create.
+     * @return The created course with HTTP status CREATED, or BAD_REQUEST if an error occurs.
+     */
+    @PostMapping
+    public ResponseEntity<?> createCurso(@RequestBody Curso curso) {
         try {
-            Curso cursoCreado = cursoService.crearCurso(curso);
-            return new ResponseEntity<>(cursoCreado, HttpStatus.CREATED); // Devuelve una respuesta 201 Created con el curso creado
+            Curso createdCurso = cursoService.createCurso(curso);
+            return new ResponseEntity<>(createdCurso, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            Map<String, String> respuestaError = new HashMap<>();
-            respuestaError.put("error", e.getMessage());
-            return new ResponseEntity<>(respuestaError, HttpStatus.BAD_REQUEST); // Devuelve una respuesta 400 Bad Request en caso de error
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
     }
 
-    @PutMapping("/{id}") // Maneja solicitudes PUT a /api/cursos/{id} para actualizar un curso existente
-    public ResponseEntity<Curso> actualizarCurso(@PathVariable Long id, @RequestBody Curso detallesCurso) {
+    /**
+     * PUT /api/cursos/{id}
+     * Updates an existing course.
+     * @param id The ID of the course to update.
+     * @param cursoDetails The updated course details.
+     * @return The updated course with HTTP status OK, or NOT_FOUND/BAD_REQUEST if an error occurs.
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateCurso(@PathVariable Long id, @RequestBody Curso cursoDetails) {
         try {
-            Curso cursoActualizado = cursoService.actualizarCurso(id, detallesCurso);
-            return ResponseEntity.ok(cursoActualizado); // Devuelve una respuesta 200 OK con el curso actualizado
+            Curso updatedCurso = cursoService.updateCurso(id, cursoDetails);
+            return new ResponseEntity<>(updatedCurso, HttpStatus.OK);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si el curso no se encuentra, devuelve una respuesta 404 Not Found
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            if (e.getMessage().contains("no encontrado")) {
+                return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+            }
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
         }
     }
 
-    @DeleteMapping("/{id}") // Maneja solicitudes DELETE a /api/cursos/{id} para eliminar un curso
-    public ResponseEntity<Void> eliminarCurso(@PathVariable Long id) {
+    /**
+     * DELETE /api/cursos/{id}
+     * Deletes a course by its ID.
+     * @param id The ID of the course to delete.
+     * @return HTTP status NO_CONTENT if successful, or NOT_FOUND if the course is not found.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCurso(@PathVariable Long id) {
         try {
-            cursoService.eliminarCurso(id);
-            return ResponseEntity.noContent().build(); // Devuelve una respuesta 204 No Content para indicar eliminación exitosa
-        }
-        catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Si el curso no se encuentra, devuelve una respuesta 404 Not Found
+            cursoService.deleteCurso(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
     }
 
-    @GetMapping("/categoria/{categoria}") // Maneja solicitudes GET a /api/cursos/categoria/{nombreCategoria}
-    public List<Curso> obtenerCursosPorCategoria(@PathVariable String categoria) {
-        return cursoService.obtenerCursosPorCategoria(categoria);
-    }
-
-    @GetMapping("/profesor/{nombreUsuarioProfesor}") // Maneja solicitudes GET a /api/cursos/profesor/{nombreUsuarioProfesor}
-    public List<Curso> obtenerCursosPorNombreUsuarioProfesor(@PathVariable String nombreUsuarioProfesor) {
-        return cursoService.obtenerCursosPorNombreUsuarioProfesor(nombreUsuarioProfesor);
+    /**
+     * GET /api/cursos/categoria/{categoria}
+     * Retrieves courses by category.
+     * @param categoria The category to search for.
+     * @return A list of courses in the specified category with HTTP status OK.
+     */
+    @GetMapping("/categoria/{categoria}")
+    public ResponseEntity<List<Curso>> getCursosByCategoria(@PathVariable String categoria) {
+        List<Curso> cursos = cursoService.getCursosByCategoria(categoria);
+        return new ResponseEntity<>(cursos, HttpStatus.OK);
     }
 }

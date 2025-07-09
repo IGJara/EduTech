@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List; // Importar List para getAllUsers
 import java.util.Map;
 import java.util.Optional;
 
@@ -53,8 +54,35 @@ public class AuthController {
             return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
         }
     }
-    
-    @DeleteMapping("/user/{id}")
+
+    // --- NUEVOS ENDPOINTS CRUD ---
+
+    @GetMapping("/users") // GET /api/auth/users
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = authService.getAllUsers();
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    @GetMapping("/users/{id}") // GET /api/auth/users/{id}
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return authService.getUserById(id)
+                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @PutMapping("/users/{id}") // PUT /api/auth/users/{id}
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+        try {
+            User updatedUser = authService.updateUser(id, userDetails);
+            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+        } catch (RuntimeException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("error", e.getMessage());
+            return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND); // O BAD_REQUEST si es por validación
+        }
+    }
+
+    @DeleteMapping("/users/{id}") // DELETE /api/auth/users/{id}
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         try {
             authService.deleteUser(id);

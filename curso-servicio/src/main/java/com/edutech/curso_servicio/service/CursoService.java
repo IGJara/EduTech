@@ -1,88 +1,110 @@
-package com.edutech.curso_servicio.service; // Asegúrate de que este paquete coincida con la estructura de tu proyecto
+package com.edutech.curso_servicio.service;
 
-import com.edutech.curso_servicio.model.Curso; // Importa tu clase Curso del paquete correcto
-import com.edutech.curso_servicio.repository.CursoRepository; // Importa tu interfaz CursoRepository del paquete correcto
-import org.springframework.stereotype.Service; // Importa Service
+import com.edutech.curso_servicio.model.Curso;
+import com.edutech.curso_servicio.repository.CursoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDate; // Importar LocalDate para las fechas
 import java.util.List;
 import java.util.Optional;
 
-@Service // Indica que esta clase es un componente de servicio de Spring
+@Service // Indicates that this is a service component
 public class CursoService {
 
     private final CursoRepository cursoRepository;
 
-    // Inyección de dependencia del CursoRepository a través del constructor
-    // @Autowired // Se recomienda para la inyección por constructor - ¡ELIMINADO: Anotación @Autowired innecesaria!
+    @Autowired // Dependency injection
     public CursoService(CursoRepository cursoRepository) {
         this.cursoRepository = cursoRepository;
     }
 
-    // Obtiene todos los cursos disponibles
-    public List<Curso> obtenerTodosLosCursos() {
+    /**
+     * Retrieves all courses.
+     * @return A list of all courses.
+     */
+    public List<Curso> getAllCursos() {
         return cursoRepository.findAll();
     }
 
-    // Obtiene un curso por su ID
-    public Optional<Curso> obtenerCursoPorId(Long id) {
+    /**
+     * Retrieves a course by its ID.
+     * @param id The ID of the course.
+     * @return An Optional containing the course if found, or empty if not.
+     */
+    public Optional<Curso> getCursoById(Long id) {
         return cursoRepository.findById(id);
     }
 
-    // Crea un nuevo curso
-    public Curso crearCurso(Curso curso) {
-        // === VALIDACIÓN CRUCIAL PARA testCrearCurso_NombreVacio ===
-        // Asegurarse de que el nombre del curso no esté vacío o sea nulo
-        if (curso.getNombre() == null || curso.getNombre().trim().isEmpty()) {
-            throw new RuntimeException("El nombre del curso no puede estar vacío.");
+    /**
+     * Creates a new course.
+     * @param curso The course object to create.
+     * @return The created course.
+     * @throws RuntimeException if a course with the same name already exists or if essential fields are missing.
+     */
+    public Curso createCurso(Curso curso) {
+        // Basic validation for required fields
+        if (curso.getNombre() == null || curso.getNombre().trim().isEmpty() ||
+            curso.getDescripcion() == null || curso.getDescripcion().trim().isEmpty() ||
+            curso.getCategoria() == null || curso.getCategoria().trim().isEmpty()) {
+            throw new RuntimeException("Nombre, descripción y categoría son campos obligatorios.");
         }
-        // =========================================================
 
-        // Validación de negocio: Asegurarse de que el nombre del curso sea único.
+        // Check if a course with the same name already exists
         if (cursoRepository.findByNombre(curso.getNombre()).isPresent()) {
             throw new RuntimeException("Ya existe un curso con el nombre: " + curso.getNombre());
         }
-        // Guarda el nuevo curso en la base de datos
         return cursoRepository.save(curso);
     }
 
-    // Actualiza los detalles de un curso existente por su ID
-    public Curso actualizarCurso(Long id, Curso detallesCurso) {
-        // Busca el curso por su ID. Si no se encuentra, lanza una excepción.
-        return cursoRepository.findById(id)
-                .map(cursoExistente -> {
-                    // Actualiza los campos del curso existente con los nuevos detalles
-                    cursoExistente.setNombre(detallesCurso.getNombre());
-                    cursoExistente.setDescripcion(detallesCurso.getDescripcion());
-                    cursoExistente.setCategoria(detallesCurso.getCategoria());
-                    cursoExistente.setPrecio(detallesCurso.getPrecio());
-                    cursoExistente.setFechaInicio(detallesCurso.getFechaInicio());
-                    cursoExistente.setFechaFin(detallesCurso.getFechaFin());
-                    cursoExistente.setNombreUsuarioProfesor(detallesCurso.getNombreUsuarioProfesor());
-                    // Guarda los cambios del curso actualizado en la base de datos
-                    return cursoRepository.save(cursoExistente);
-                })
-                .orElseThrow(() -> new RuntimeException("Curso no encontrado con ID: " + id));
+    /**
+     * Updates an existing course.
+     * @param id The ID of the course to update.
+     * @param cursoDetails The updated course details.
+     * @return The updated course.
+     * @throws RuntimeException if the course is not found or if the new name conflicts with an existing course.
+     */
+    public Curso updateCurso(Long id, Curso cursoDetails) {
+        return cursoRepository.findById(id).map(curso -> {
+            // Basic validation for required fields
+            if (cursoDetails.getNombre() == null || cursoDetails.getNombre().trim().isEmpty() ||
+                cursoDetails.getDescripcion() == null || cursoDetails.getDescripcion().trim().isEmpty() ||
+                cursoDetails.getCategoria() == null || cursoDetails.getCategoria().trim().isEmpty()) {
+                throw new RuntimeException("Nombre, descripción y categoría son campos obligatorios.");
+            }
+
+            // Check if the new name conflicts with another existing course (excluding itself)
+            Optional<Curso> existingCursoWithName = cursoRepository.findByNombre(cursoDetails.getNombre());
+            if (existingCursoWithName.isPresent() && !existingCursoWithName.get().getId().equals(id)) {
+                throw new RuntimeException("Ya existe otro curso con el nombre: " + cursoDetails.getNombre());
+            }
+
+            curso.setNombre(cursoDetails.getNombre());
+            curso.setDescripcion(cursoDetails.getDescripcion());
+            curso.setCategoria(cursoDetails.getCategoria());
+            curso.setDuracionHoras(cursoDetails.getDuracionHoras());
+            curso.setPrecio(cursoDetails.getPrecio());
+            return cursoRepository.save(curso);
+        }).orElseThrow(() -> new RuntimeException("Curso no encontrado con ID: " + id));
     }
 
-    // Elimina un curso por su ID
-    public void eliminarCurso(Long id) {
-        // Verifica si el curso existe antes de intentar eliminarlo.
+    /**
+     * Deletes a course by its ID.
+     * @param id The ID of the course to delete.
+     * @throws RuntimeException if the course is not found.
+     */
+    public void deleteCurso(Long id) {
         if (!cursoRepository.existsById(id)) {
-            // CORREGIDO: Eliminado el 'new' redundante.
             throw new RuntimeException("Curso no encontrado con ID: " + id);
         }
-        // Elimina el curso de la base de datos
         cursoRepository.deleteById(id);
     }
 
-    // Obtiene una lista de cursos por una categoría específica
-    public List<Curso> obtenerCursosPorCategoria(String categoria) {
+    /**
+     * Finds courses by category.
+     * @param categoria The category to search for.
+     * @return A list of courses belonging to the specified category.
+     */
+    public List<Curso> getCursosByCategoria(String categoria) {
         return cursoRepository.findByCategoria(categoria);
-    }
-
-    // Obtiene una lista de cursos asignados a un nombre de usuario de profesor específico
-    public List<Curso> obtenerCursosPorNombreUsuarioProfesor(String nombreUsuarioProfesor) {
-        return cursoRepository.findByNombreUsuarioProfesor(nombreUsuarioProfesor);
     }
 }

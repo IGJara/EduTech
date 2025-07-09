@@ -10,22 +10,19 @@
         <relativePath>../pom.xml</relativePath> <!-- Ruta relativa al pom.xml padre -->
     </parent>
 
-    <groupId>com.edutech.soporte_servicio</groupId>
-    <artifactId>soporte-servicio</artifactId>
+    <groupId>com.edutech.login_servicio</groupId>
+    <artifactId>login-servicio</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>soporte-servicio</name>
-    <description>Microservicio para la gestión de tickets de soporte de EduTech</description>
+    <name>login-servicio</name>
+    <description>Microservicio para la gestión de autenticación y usuarios de login de EduTech</description>
 
     <properties>
+        <!-- Las propiedades como java.version, spring-boot.version, etc., se heredan del padre -->
+        <!-- No es necesario definirlas aquí a menos que quieras sobrescribir un valor específico para este módulo -->
     </properties>
 
     <dependencies>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-
+        <!-- Dependencias comunes a todos los servicios, sin especificar la versión (se gestionan en el padre) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -54,19 +51,27 @@
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <!-- ¡DEPENDENCIA DE SPRINGDOC OPENAPI PARA SWAGGER UI! -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
-
+        <!-- Si este servicio necesita comunicarse con otros microservicios usando Feign, descomenta esto:
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        -->
     </dependencies>
 
     <build>
         <plugins>
+            <!-- El spring-boot-maven-plugin se hereda del pluginManagement del padre -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Otros plugins como maven-compiler-plugin también se heredan y configuran desde el padre -->
         </plugins>
     </build>
 
